@@ -1,0 +1,10 @@
+import { NextResponse } from "next/server";
+import { notFound } from "@/lib/core/errors";
+import { json, route } from "@/lib/server/http";
+import { adminCreate, adminList } from "@/lib/services/admin";
+import { isAdminTable } from "@/lib/services/schemas";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+const t = (s: string) => { if (!isAdminTable(s)) throw notFound(); return s; };
+export const GET = route<{ table: string }>(async (_r, { actor, params }) => adminList(actor, t(params.table)));
+export const POST = route<{ table: string }>(async (req, { actor, params }) => NextResponse.json(await adminCreate(actor, t(params.table), await json(req)), { status: 201 }));

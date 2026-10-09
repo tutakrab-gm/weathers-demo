@@ -1,0 +1,12 @@
+import { z } from "zod";
+import { notFound } from "@/lib/core/errors";
+import { json, route } from "@/lib/server/http";
+import { adminRemove, adminUpdate } from "@/lib/services/admin";
+import { isAdminTable } from "@/lib/services/schemas";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+type P = { table: string; id: string };
+const t = (s: string) => { if (!isAdminTable(s)) throw notFound(); return s; };
+const body = z.object({ version: z.coerce.number().int().min(1), data: z.record(z.string(), z.unknown()) });
+export const PUT = route<P>(async (req, { actor, params }) => { const b = body.parse(await json(req)); return adminUpdate(actor, t(params.table), params.id, b.version, b.data); });
+export const DELETE = route<P>(async (req, { actor, params }) => { const b = z.object({ version: z.coerce.number().int().min(1) }).parse(await json(req)); await adminRemove(actor, t(params.table), params.id, b.version); return { ok: true }; });
