@@ -39,8 +39,12 @@ export const modes = {
   chat: !forceMock && env.anthropicKey ? "real" : "mock",
 } as const;
 
-/** dev login เปิดได้เฉพาะ mock sheets และไม่ใช่ production */
-export const devLoginEnabled = () => !env.isProd && modes.sheets === "mock";
+/**
+ * Dev login เปิดได้เฉพาะเมื่อ Sheets เป็น mock (ไม่มีข้อมูลจริงให้เสี่ยง) และไม่ใช่ production
+ * ข้อยกเว้นเดียว: DEMO_DEV_LOGIN=1 (docker-compose ตั้งให้เพื่อให้ `docker compose up` ทดลองได้ทันที)
+ * ซึ่งเมื่อตั้ง SHEET_ID จริงจะปิดเองอัตโนมัติ
+ */
+export const devLoginEnabled = () => modes.sheets === "mock" && (!env.isProd || e("DEMO_DEV_LOGIN") === "1");
 export const emailLoginEnabled = () => !!env.smtpUrl;
 export const lineLoginEnabled = () => !!(env.line.id && env.line.secret);
 export const googleLoginEnabled = () => !!(env.google.id && env.google.secret);

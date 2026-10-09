@@ -1,0 +1,34 @@
+# docker compose up --build  ->  http://localhost:3000
+# ไม่มี credential = ทุก adapter ทำงานแบบ mock (Sheets/รูป/LINE/หน่วยงานน้ำ/Claude)
+# ใส่ค่าใน .env (คัดลอกจาก .env.example) เพื่อเปลี่ยนเป็น real ทีละบริการ
+services:
+  app:
+    build: .
+    ports: ["3000:3000"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      REDIS_URL: redis://redis:6379
+      AUTH_SECRET: ${AUTH_SECRET:-change-me-in-real-deployments-please-32chars}
+      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+      AUTH_TRUST_HOST: "true"
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3000}
+      CRON_SECRET: ${CRON_SECRET:-dev-cron-secret}
+      ENABLE_INTERNAL_CRON: ${ENABLE_INTERNAL_CRON:-1}
+      # Dev login ใน production เปิดเฉพาะเมื่อยังเป็น mock (ไม่มี SHEET_ID) — ตั้ง DEMO_DEV_LOGIN=0 เพื่อปิด
+      DEMO_DEV_LOGIN: ${DEMO_DEV_LOGIN:-1}
+    volumes:
+      - appdata:/app/.data
+    depends_on:
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redisdata:/data]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 5s, timeout: 3s, retries: 10 }
+    restart: unless-stopped
+volumes:
+  appdata:
+  redisdata:

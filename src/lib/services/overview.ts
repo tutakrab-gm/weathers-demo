@@ -49,7 +49,7 @@ export async function projectDetail(actor: Actor, projectId: string) {
   const mine = links.filter((l) => l.project_id === projectId);
   return {
     project, status,
-    reports: reports.map((r) => ({ ...r, created_by_name: users.get(r.created_by) ?? r.created_by, updated_by_name: users.get(String(r.updated_by)) ?? r.updated_by })),
+    reports: reports.map((r) => ({ ...r, created_by_name: users.get(r.created_by) ?? r.created_by, updated_by_name: users.get(String(r.updated_by)) ?? String(r.updated_by ?? "") })),
     photos: photos.map((p) => ({ photo_id: p.photo_id, report_id: p.report_id, taken_at: p.taken_at, lat: p.lat, lng: p.lng })),
     stations: mine.map((l) => ({ link: l, reading: ext.find((s) => s.station_id === l.station_id) ?? null })),
     editors,
