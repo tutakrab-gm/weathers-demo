@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 /**
- * Next file-tracing ตกหล่นไฟล์ที่ถูกโหลดผ่าน exports map (.mjs) ของ dependency ลึก ๆ ของ exceljs/googleapis
+ * Next file-tracing ตกหล่นไฟล์ที่ถูกโหลดผ่าน exports map (.mjs) ของ dependency ลึก ๆ ของ exceljs
  * จึงคำนวณ closure ของ dependencies แล้วบังคับรวมเข้า standalone output (ทำงานเฉพาะตอน build)
  */
 function closure(roots) {
@@ -22,7 +22,7 @@ function closure(roots) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
-  serverExternalPackages: ["sharp", "exceljs", "ioredis", "googleapis", "nodemailer", "pdf-lib", "@pdf-lib/fontkit"],
+  serverExternalPackages: ["sharp", "exceljs", "ioredis", "pg", "nodemailer", "pdf-lib", "@pdf-lib/fontkit"],
   poweredByHeader: false,
   outputFileTracingIncludes: {
     "/api/export": ["./assets/fonts/**", ...closure(["exceljs", "pdf-lib", "@pdf-lib/fontkit"])],

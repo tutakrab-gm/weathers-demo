@@ -10,10 +10,10 @@ import { exportPdf, exportXlsx } from "@/lib/services/export";
 import { heartbeat } from "@/lib/services/presence";
 import { consumeMagicToken, issueMagicToken } from "@/lib/services/magic";
 import { levelFromCm } from "@/lib/services/levels";
-import { A, blank, freshEnv } from "./helpers";
-import type { MockRepository } from "@/lib/repo/mock";
+import { A, blank, freshEnv, slow } from "./helpers";
+import type { Repository } from "@/lib/repo/types";
 
-let repo: MockRepository;
+let repo: Repository;
 beforeEach(async () => { repo = await freshEnv(); });
 
 describe("สิทธิ์ตามโครงการ", () => {

@@ -1,5 +1,5 @@
 # docker compose up --build  ->  http://localhost:3000
-# ไม่มี credential = ทุก adapter ทำงานแบบ mock (Sheets/รูป/LINE/หน่วยงานน้ำ/Claude)
+# app + PostgreSQL + Redis ; บริการอื่น (รูป/LINE/หน่วยงานน้ำ/Claude) เป็น mock จนกว่าจะใส่ credential
 # ใส่ค่าใน .env (คัดลอกจาก .env.example) เพื่อเปลี่ยนเป็น real ทีละบริการ
 services:
   app:
@@ -9,6 +9,9 @@ services:
       - path: .env
         required: false
     environment:
+      DATABASE_URL: postgres://water:${POSTGRES_PASSWORD:-water}@db:5432/water
+      AUTO_SEED: ${AUTO_SEED:-1}   # ใส่ข้อมูลเดโมเมื่อ DB ว่าง — production จริงตั้ง AUTO_SEED=0 และใช้ BOOTSTRAP_ADMIN_EMAIL
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
       REDIS_URL: redis://redis:6379
       AUTH_SECRET: ${AUTH_SECRET:-change-me-in-real-deployments-please-32chars}
       AUTH_URL: ${AUTH_URL:-http://localhost:3000}
@@ -16,12 +19,22 @@ services:
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3000}
       CRON_SECRET: ${CRON_SECRET:-dev-cron-secret}
       ENABLE_INTERNAL_CRON: ${ENABLE_INTERNAL_CRON:-1}
-      # Dev login ใน production เปิดเฉพาะเมื่อยังเป็น mock (ไม่มี SHEET_ID) — ตั้ง DEMO_DEV_LOGIN=0 เพื่อปิด
+      # Dev login ใช้ได้เฉพาะตอน AUTO_SEED=1 (เดโม) และรับเฉพาะอีเมล @example.com — ตั้ง DEMO_DEV_LOGIN=0 เพื่อปิด
       DEMO_DEV_LOGIN: ${DEMO_DEV_LOGIN:-1}
     volumes:
       - appdata:/app/.data
     depends_on:
+      db: { condition: service_healthy }
       redis: { condition: service_healthy }
+    restart: unless-stopped
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: water
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-water}
+      POSTGRES_DB: water
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U water -d water"], interval: 5s, timeout: 3s, retries: 15 }
     restart: unless-stopped
   redis:
     image: redis:7-alpine
@@ -31,4 +44,5 @@ services:
     restart: unless-stopped
 volumes:
   appdata:
+  pgdata:
   redisdata:

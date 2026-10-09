@@ -68,7 +68,7 @@ test("ผู้บริหารเห็นทุกโครงการ + ch
   expect((await page.request.get("/admin/users")).url()).not.toContain("/admin/users");
 });
 
-test("admin: ปิดบัญชีมีผลทันที และผู้ไม่อยู่ในชีตเห็นหน้ารออนุมัติ", async ({ page, browser }) => {
+test("admin: ปิดบัญชีมีผลทันที และผู้ไม่อยู่ในระบบเห็นหน้ารออนุมัติ", async ({ page, browser }) => {
   const c2 = await browser.newContext(); const p2 = await c2.newPage();
   await login(p2, "staff2@example.com");
   expect((await p2.request.get("/api/projects")).status()).toBe(200);

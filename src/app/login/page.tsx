@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { devLoginEnabled, emailLoginEnabled, googleLoginEnabled, lineLoginEnabled } from "@/lib/core/env";
+import { devLoginAllowsEmail, devLoginEnabled, emailLoginEnabled, googleLoginEnabled, lineLoginEnabled } from "@/lib/core/env";
 import { repoReady } from "@/lib/repo";
 import { getSession } from "@/lib/server/session";
 import { LoginForm } from "./LoginForm";
@@ -11,7 +11,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (s.state === "active") redirect("/");
   if (s.state !== "anonymous") redirect("/pending");
   const { error } = await searchParams;
-  const dev = devLoginEnabled() ? (await (await repoReady()).list("users")).filter((u) => u.status === "active").map((u) => ({ email: u.email, name: u.display_name, role: u.role })) : [];
+  const dev = devLoginEnabled() ? (await (await repoReady()).list("users")).filter((u) => u.status === "active" && devLoginAllowsEmail(u.email)).map((u) => ({ email: u.email, name: u.display_name, role: u.role })) : [];
   return (
     <main className="mx-auto grid min-h-dvh max-w-md place-items-center p-6">
       <div className="w-full space-y-5">

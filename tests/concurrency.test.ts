@@ -3,15 +3,15 @@ import { ConflictError } from "@/lib/core/errors";
 import { adminUpdate } from "@/lib/services/admin";
 import { createReport, listReports, reviseReport, voidReport, reportHistory } from "@/lib/services/reports";
 import { repoReady } from "@/lib/repo";
-import type { MockRepository } from "@/lib/repo/mock";
-import { A, blank, freshEnv } from "./helpers";
+import type { Repository } from "@/lib/repo/types";
+import { A, blank, freshEnv, slow } from "./helpers";
 
-let repo: MockRepository;
+let repo: Repository;
 beforeEach(async () => { repo = await freshEnv(); });
 
 describe("optimistic locking", () => {
   it("เขียนพร้อมกัน 2 คนด้วย version เดียวกัน: คนหนึ่งสำเร็จ อีกคน 409 และข้อมูลไม่ถูกทับเงียบ ๆ", async () => {
-    repo.racy = true; repo.latencyMs = 5; // จำลอง Sheets: ตรวจ version กับเขียนไม่ atomic
+    slow(repo, 5);
     const p = (await repo.get("projects", "NBR01"))!;
     const mine = { ...p, name: "ชื่อจากคน A" }, theirs = { ...p, name: "ชื่อจากคน B" };
     const results = await Promise.allSettled([
@@ -50,7 +50,7 @@ describe("optimistic locking", () => {
 
 describe("รายงานแบบ append-only", () => {
   it("รายงานพร้อมกัน 20 รายการ ไม่มีข้อมูลหาย และ CurrentStatus ตรงกับรายงานล่าสุด", async () => {
-    repo.racy = true; repo.latencyMs = 2;
+    slow(repo, 2);
     const before = (await repo.list("reports")).filter((r) => r.project_id === "PTH02").length;
     const base = Date.now();
     await Promise.all(Array.from({ length: 20 }, (_, i) =>
@@ -71,7 +71,7 @@ describe("รายงานแบบ append-only", () => {
   });
 
   it("แก้ไขพร้อมกันจาก revision เดียวกัน: สำเร็จ 1 อีกคน 409", async () => {
-    repo.racy = true; repo.latencyMs = 3;
+    slow(repo, 3);
     const r = await createReport(A.staff1, "NBR01", { ...blank, water_level_cm: 100 });
     const res = await Promise.allSettled([
       reviseReport(A.staff1, "NBR01", r.report_id, 1, { ...blank, water_level_cm: 101 }),

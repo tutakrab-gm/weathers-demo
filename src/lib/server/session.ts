@@ -11,15 +11,15 @@ export type Session =
   | { state: "active"; user: User; actor: Actor };
 
 /**
- * ตรวจตัวตน + สถานะผู้ใช้จากชีตทุก request (cache สั้น ๆ 5 วินาที, ปิดบัญชีแล้ว invalidate ทันที)
- * ห้ามเชื่อ role/สิทธิ์ใน JWT — ใช้เฉพาะ uid แล้วอ่านจากชีตใหม่เสมอ
+ * ตรวจตัวตน + สถานะผู้ใช้จากฐานข้อมูลทุก request (cache สั้น ๆ 5 วินาที, ปิดบัญชีแล้ว invalidate ทันที)
+ * ห้ามเชื่อ role/สิทธิ์ใน JWT — ใช้เฉพาะ uid แล้วอ่านจากฐานข้อมูลใหม่เสมอ
  */
 export async function getSession(): Promise<Session> {
   const s = await auth();
   if (!s?.user) return { state: "anonymous" };
   const u = s.user as unknown as { uid: string | null; ident: { email: string | null; line: string | null } };
   let user: User | null = u.uid ? await getUserById(u.uid) : null;
-  // ผู้ที่เคยรออนุมัติ: admin เพิ่มในชีตแล้ว ไม่ต้อง login ใหม่
+  // ผู้ที่เคยรออนุมัติ: admin เพิ่มในระบบแล้ว ไม่ต้อง login ใหม่
   if (!user && !u.uid) user = await findUserByIdentity({ email: u.ident?.email, line_user_id: u.ident?.line });
   if (!user) return { state: "pending", email: u.ident?.email ?? null, line: u.ident?.line ?? null };
   if (user.status === "disabled") return { state: "disabled" };

@@ -14,9 +14,9 @@ export class MockRepository implements Repository {
   private db: Db;
   private file?: string;
   private saveTimer?: NodeJS.Timeout;
-  /** หน่วงเวลาจำลอง latency ของ Sheets (ใช้ใน test พิสูจน์ race) */
+  /** หน่วงเวลาจำลอง latency ของฐานข้อมูล (ใช้ใน test พิสูจน์ race) */
   public latencyMs = 0;
-  /** true = หน่วงระหว่างตรวจ version กับเขียน (จำลอง Sheets ที่ไม่มี transaction) เพื่อทดสอบว่า lock กันได้จริง */
+  /** true = หน่วงระหว่างตรวจ version กับเขียน (จำลองฐานข้อมูลที่ read-modify-write ไม่ atomic) เพื่อทดสอบว่า lock กันได้จริง */
   public racy = false;
 
   constructor(opts: { file?: string } = {}) {
@@ -81,5 +81,5 @@ export class MockRepository implements Repository {
     return { ...merged } as unknown as TableTypes[T];
   }
   async remove(t: TableName, key: string) { this.db[t].delete(key); this.scheduleSave(); }
-  async ensureSchema() { return { created: [], existing: Object.values(TABLES).map((d) => d.sheet) }; }
+  async ensureSchema() { return { created: [], existing: Object.values(TABLES).map((d) => d.table) }; }
 }

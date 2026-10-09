@@ -8,9 +8,8 @@ export const env = {
   baseUrl: e("APP_BASE_URL") || "http://localhost:3000",
   cronSecret: e("CRON_SECRET"),
   authSecret: e("AUTH_SECRET") || (process.env.NODE_ENV === "production" ? "" : "dev-only-secret-do-not-use-in-production"),
-  sheetId: e("SHEET_ID"),
-  saJson: e("GOOGLE_SERVICE_ACCOUNT_JSON"),
-  sheetsCacheTtl: Number(e("SHEETS_CACHE_TTL_MS") || 5000),
+  databaseUrl: e("DATABASE_URL"),
+  databaseSsl: e("DATABASE_SSL") === "1",
   s3: {
     endpoint: e("S3_ENDPOINT"),
     region: e("S3_REGION") || "auto",
@@ -31,7 +30,7 @@ export const env = {
 };
 
 export const modes = {
-  sheets: !forceMock && env.sheetId && env.saJson ? "real" : "mock",
+  db: !forceMock && env.databaseUrl ? "real" : "mock",
   storage: !forceMock && env.s3.bucket && env.s3.key && env.s3.secret ? "real" : "mock",
   redis: !forceMock && env.redisUrl ? "real" : "mock",
   line: !forceMock && env.line.token ? "real" : "mock",
@@ -40,11 +39,13 @@ export const modes = {
 } as const;
 
 /**
- * Dev login เปิดได้เฉพาะเมื่อ Sheets เป็น mock (ไม่มีข้อมูลจริงให้เสี่ยง) และไม่ใช่ production
- * ข้อยกเว้นเดียว: DEMO_DEV_LOGIN=1 (docker-compose ตั้งให้เพื่อให้ `docker compose up` ทดลองได้ทันที)
- * ซึ่งเมื่อตั้ง SHEET_ID จริงจะปิดเองอัตโนมัติ
+ * Dev login: เฉพาะ non-production, หรือ production ที่ตั้ง DEMO_DEV_LOGIN=1 (docker-compose ตั้งให้เพื่อเดโม)
+ * และต้องเป็นฐานข้อมูล mock หรือฐานเดโมที่ seed เอง (AUTO_SEED=1) เท่านั้น
+ * กรณีฐาน PostgreSQL จริง จะยอมเฉพาะอีเมล @example.com (ข้อมูลเดโม) — ดู devLoginAllowsEmail
  */
-export const devLoginEnabled = () => modes.sheets === "mock" && (!env.isProd || e("DEMO_DEV_LOGIN") === "1");
+export const devLoginEnabled = () =>
+  (modes.db === "mock" || e("AUTO_SEED") === "1") && (!env.isProd || e("DEMO_DEV_LOGIN") === "1");
+export const devLoginAllowsEmail = (email: string) => modes.db === "mock" || email.toLowerCase().endsWith("@example.com");
 export const emailLoginEnabled = () => !!env.smtpUrl;
 export const lineLoginEnabled = () => !!(env.line.id && env.line.secret);
 export const googleLoginEnabled = () => !!(env.google.id && env.google.secret);

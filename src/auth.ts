@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import Line from "next-auth/providers/line";
 import { authConfig } from "./auth.config";
-import { devLoginEnabled, emailLoginEnabled, env, googleLoginEnabled, lineLoginEnabled } from "./lib/core/env";
+import { devLoginAllowsEmail, devLoginEnabled, emailLoginEnabled, env, googleLoginEnabled, lineLoginEnabled } from "./lib/core/env";
 import { consumeMagicToken } from "./lib/services/magic";
 import { findUserByIdentity, linkIdentity, reportUnknownLogin } from "./lib/services/users";
 import { audit } from "./lib/services/audit";
@@ -29,7 +29,7 @@ if (devLoginEnabled()) {
     async authorize(c) {
       if (!devLoginEnabled()) return null; // กันซ้ำ: ปิดเมื่อ production
       const email = String(c?.email ?? "").toLowerCase();
-      return email ? { id: email, email } : null;
+      return email && devLoginAllowsEmail(email) ? { id: email, email } : null;
     },
   }));
 }
@@ -44,7 +44,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Google: ต้องเป็นอีเมลที่ยืนยันแล้วเท่านั้น
       if (account?.provider === "google" && (profile as { email_verified?: boolean } | undefined)?.email_verified === false) return false;
       void user;
-      return true; // ไม่อยู่ในชีตก็ login ได้ แต่จะเห็นหน้า "รอการอนุมัติ" (ตรวจใน requireUser)
+      return true; // ไม่อยู่ในระบบก็ login ได้ แต่จะเห็นหน้า "รอการอนุมัติ" (ตรวจใน requireUser)
     },
     async jwt({ token, user, account }) {
       if (user && account) {

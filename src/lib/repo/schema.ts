@@ -1,20 +1,20 @@
 /**
- * นิยามชีตทั้งหมด (single source of truth) ใช้ทั้ง setup:sheets, repository และ type
- * ทุกชีตมี version, updated_at, updated_by เพิ่มท้าย (ดู docs/ASSUMPTIONS.md)
+ * นิยามตารางทั้งหมด (single source of truth) ใช้ทั้ง setup:db, repository และ type
+ * ทุกตารางมี version, updated_at, updated_by เพิ่มท้าย (ดู docs/ASSUMPTIONS.md)
  */
 export type ColType = "s" | "n";
 export interface TableDef {
-  sheet: string;
+  table: string;
   /** คอลัมน์ที่ประกอบเป็น primary key (composite ได้) */
   key: string[];
   cols: Record<string, ColType>;
 }
 
 const meta: Record<string, ColType> = { version: "n", updated_at: "s", updated_by: "s" };
-const def = (sheet: string, key: string[], cols: Record<string, ColType>): TableDef => {
+const def = (table: string, key: string[], cols: Record<string, ColType>): TableDef => {
   const merged = { ...cols };
   for (const [k, t] of Object.entries(meta)) if (!(k in merged)) merged[k] = t;
-  return { sheet, key, cols: merged };
+  return { table, key, cols: merged };
 };
 
 export const TABLES = {

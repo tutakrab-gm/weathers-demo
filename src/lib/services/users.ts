@@ -4,7 +4,7 @@ import type { User } from "../repo/types";
 import { notifyAdmins } from "./notify";
 import { audit } from "./audit";
 
-/** cache สั้น ๆ ของสถานะผู้ใช้ (ลดการอ่านชีต) ; ปิดบัญชีแล้ว invalidate ทันที */
+/** cache สั้น ๆ ของสถานะผู้ใช้ (ลดการอ่านฐานข้อมูล) ; ปิดบัญชีแล้ว invalidate ทันที */
 const TTL = 5_000;
 const g = globalThis as unknown as { __ucache?: Map<string, { u: User | null; at: number }> };
 const cache = () => (g.__ucache ??= new Map());
@@ -26,7 +26,7 @@ export async function findUserByIdentity(id: { email?: string | null; line_user_
   return users.find((u) => (email && u.email.toLowerCase() === email) || (id.line_user_id && u.line_user_id === id.line_user_id)) ?? null;
 }
 
-/** ผู้ที่ login ได้แต่ไม่อยู่ในชีต: แจ้ง admin ครั้งเดียวต่อตัวตนต่อชั่วโมง */
+/** ผู้ที่ login ได้แต่ไม่อยู่ในระบบ: แจ้ง admin ครั้งเดียวต่อตัวตนต่อชั่วโมง */
 export async function reportUnknownLogin(provider: string, identity: { email?: string | null; line_user_id?: string | null; name?: string | null }) {
   const k = `pending-notified:${(identity.email || identity.line_user_id || "").toLowerCase()}`;
   if (!(await kv().setNx(k, "1", 3_600_000))) return;

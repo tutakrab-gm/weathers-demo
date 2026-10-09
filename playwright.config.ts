@@ -17,6 +17,6 @@ export default defineConfig({
   webServer: {
     command: `npx next dev -p ${PORT}`,
     port: PORT, timeout: 300_000, reuseExistingServer: !process.env.CI,
-    env: { PORT: String(PORT), HOSTNAME: "127.0.0.1", FORCE_MOCK: "1", MOCK_PERSIST: "0", AUTH_SECRET: "e2e-secret", AUTH_URL: `http://localhost:${PORT}`, AUTH_TRUST_HOST: "true", APP_BASE_URL: `http://localhost:${PORT}` },
+    env: { PORT: String(PORT), HOSTNAME: "127.0.0.1", ...(process.env.E2E_DATABASE_URL ? { DATABASE_URL: process.env.E2E_DATABASE_URL, AUTO_SEED: "1" } : { FORCE_MOCK: "1", MOCK_PERSIST: "0" }), AUTH_SECRET: "e2e-secret", AUTH_URL: `http://localhost:${PORT}`, AUTH_TRUST_HOST: "true", APP_BASE_URL: `http://localhost:${PORT}` },
   },
 });

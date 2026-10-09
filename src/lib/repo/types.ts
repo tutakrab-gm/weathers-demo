@@ -40,7 +40,7 @@ export interface TableTypes {
 }
 
 /**
- * Repository: interface เดียวที่ซ่อน Google Sheets (ย้ายไป PostgreSQL ได้โดยไม่แตะ business logic)
+ * Repository: interface เดียวที่ซ่อนที่เก็บข้อมูล (PostgreSQL จริง + Mock สำหรับ dev/test) — business logic ไม่รู้จัก SQL
  * - update() เป็น compare-and-set ด้วย version: ไม่ตรง => ConflictError (409)
  * - ผู้เรียกต้องถือ lock ที่เหมาะสมเอง (services/ ทำให้)
  */
@@ -53,6 +53,6 @@ export interface Repository {
   /** อัปเดตแบบ compare-and-set; patch ห้ามมี key/version */
   update<T extends TableName>(t: T, key: string, expectedVersion: number, patch: Partial<TableTypes[T]>, by: string): Promise<TableTypes[T]>;
   remove(t: TableName, key: string): Promise<void>;
-  /** ensure ชีต/หัวคอลัมน์ (setup:sheets) */
+  /** สร้าง/migrate ตาราง (setup:db) */
   ensureSchema(): Promise<{ created: string[]; existing: string[] }>;
 }
